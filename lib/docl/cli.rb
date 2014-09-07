@@ -90,10 +90,12 @@ class DOCL::CLI < Thor
         if options.user_data
             call_options[:user_data] = File.read(options.user_data)
         end
-        puts call_options
 
         response = barge.droplet.create(call_options)
-        puts response
+        if response.id == 'unprocessable_entity'
+            puts response.message
+            exit(1)
+        end
 
         if options.wait
             print "Waiting for droplet to become available"
@@ -104,6 +106,15 @@ class DOCL::CLI < Thor
                 action = barge.action.show(action_link.id).action
             end until action.status != 'in-progress'
             puts "Completed"
+
+            droplet = barge.droplet.show(response.droplet.id).droplet
+            network_types = [droplet.networks.v4]
+            network_types << droplet.networks.v6 if droplet.networks.v6
+
+            puts "You can connect to your Droplet via"
+            network_types.flatten.select { |nw| nw.type == 'public' }.each do |network|
+                puts network.ip_address
+            end
         end
     end
 
