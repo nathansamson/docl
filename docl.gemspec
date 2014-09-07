@@ -7,6 +7,7 @@ Gem::Specification.new do |gem|
     gem.version = DOCL::VERSION
     gem.authors = ["Nathan Samson"]
     gem.email = ["nathan@nathansamson.be"]
+    gem.license = "MIT"
     gem.description = %q{A command line tool for interacting with your DigitalOcean droplets.}
     gem.summary = %q{A command line tool for interacting with your DigitalOcean droplets.}
     gem.homepage = "https://github.com/nathansamson/docl"
