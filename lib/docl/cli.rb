@@ -3,7 +3,7 @@ class DOCL::CLI < Thor
     method_option :public, type: :boolean, default: false, aliases: '-p'
     def images()
         barge.image.all.images.select { |image| image.public == options.public } .each do |image|
-            puts "#{image.name} (id: #{image.id})"
+            puts "#{image.name} (#{image.slug}, id: #{image.id})"
         end
     end
 
@@ -11,6 +11,37 @@ class DOCL::CLI < Thor
     def keys()
         barge.key.all.ssh_keys.each do |key|
             puts "#{key.name} (id: #{key.id})"
+        end
+    end
+
+    desc "regions", "List regions"
+    method_option :metadata, type: :boolean, default: false
+    method_option :private_networking, type: :boolean, default: false
+    method_option :backups, type: :boolean, default: false
+    method_option :ipv6, type: :boolean, default: false
+    def regions()
+        regions = barge.region.all.regions
+        regions = regions.select do |region|
+            if options.ipv6 && !region.features.include?('ipv6')
+                next false
+            end
+
+            if options.metadata && !region.features.include?('metadata')
+                next false
+            end
+
+            if options.private_networking && !region.features.include?('private_networking')
+                next false
+            end
+
+            if options.backups && !region.features.include?('backups')
+                next false
+            end
+
+            next true
+        end
+        regions.sort { |a, b| a.name <=> b.name }.each do |region|
+            puts "#{region.name} (#{region.slug})"
         end
     end
 
