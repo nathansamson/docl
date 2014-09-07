@@ -1,9 +1,31 @@
 class DOCL::CLI < Thor
+    desc "authorize", "Authrorize docl to read / modify your DO info"
+    def authorize
+        puts "You'll need to enter your DigitalOcean Private Access Token."
+        puts "To be able to create / modify droplets, it needs to be read / write."
+        puts "You can create a token on the DO website vite the Apps & API menu."
+
+        print "Enter your DO Token: "
+        token = $stdin.gets.chomp
+
+        f = File.open(config_path, 'w')
+        f.write(token)
+        f.close
+        File.chmod(0600, config_path)
+    end
+
     desc "images", "List all images"
     method_option :public, type: :boolean, default: false, aliases: '-p'
     def images()
-        barge.image.all.images.select { |image| image.public == options.public } .each do |image|
-            puts "#{image.name} (#{image.slug}, id: #{image.id})"
+        images = barge.image.all.images
+        images = images.select { |image| image.public == options.public }
+        images = images.sort { |a, b| a.name <=> b.name }
+        images.each do |image|
+            if !image.slug.nil?
+                puts "#{image.name} (#{image.slug}, id: #{image.id})"
+            else
+                puts "#{image.name} (id: #{image.id})"
+            end
         end
     end
 
@@ -86,7 +108,16 @@ class DOCL::CLI < Thor
     end
 
     private
+    def config_path
+        File.expand_path('~/.docl-access-token')
+    end
+
     def barge
-        @barge ||= Barge::Client.new(access_token: 'fe05cfe7139b010a4606d0bda434c1a8ffef67dffa33d303a24d3b9e35a2c2fd')
+        if !File.exist?(config_path)
+            puts 'Please run docl authorize first.'
+            exit(1)
+        end
+
+        @barge ||= Barge::Client.new(access_token: File.read(config_path))
     end
 end
