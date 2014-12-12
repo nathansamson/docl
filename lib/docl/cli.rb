@@ -129,6 +129,9 @@ class DOCL::CLI < Thor
 
     desc 'destroy [droplet-id]', 'Destroy a droplet'
     def destroy(droplet_id)
+        if !yes?('This is irreversible, are you sure? (y/n)')
+            return
+        end
         response = barge.droplet.destroy(droplet_id)
         if response.id || response.message
             puts "#{response.id}: #{response.message}" 
