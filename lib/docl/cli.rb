@@ -107,14 +107,9 @@ class DOCL::CLI < Thor
             end until action.status != 'in-progress'
             puts "Completed"
 
-            droplet = barge.droplet.show(response.droplet.id).droplet
-            network_types = [droplet.networks.v4]
-            network_types << droplet.networks.v6 if droplet.networks.v6
-
             puts "You can connect to your Droplet via"
-            network_types.flatten.select { |nw| nw.type == 'public' }.each do |network|
-                puts network.ip_address
-            end
+            droplet = barge.droplet.show(response.droplet.id).droplet
+            ip_addresses(droplet).each(&method(:puts))
         end
     end
 
@@ -130,5 +125,12 @@ class DOCL::CLI < Thor
         end
 
         @barge ||= Barge::Client.new(access_token: File.read(config_path))
+    end
+
+    def ip_addresses(droplet)
+        network_types = [droplet.networks.v4]
+        network_types << droplet.networks.v6 if droplet.networks.v6
+
+        network_types.flatten.select { |nw| nw.type == 'public' }.map { |nw| nw.ip_address }
     end
 end
