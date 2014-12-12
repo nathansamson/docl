@@ -107,14 +107,36 @@ class DOCL::CLI < Thor
             end until action.status != 'in-progress'
             puts "Completed"
 
-            droplet = barge.droplet.show(response.droplet.id).droplet
-            network_types = [droplet.networks.v4]
-            network_types << droplet.networks.v6 if droplet.networks.v6
-
             puts "You can connect to your Droplet via"
-            network_types.flatten.select { |nw| nw.type == 'public' }.each do |network|
-                puts network.ip_address
-            end
+            droplet = barge.droplet.show(response.droplet.id).droplet
+            ip_addresses(droplet).each(&method(:puts))
+        end
+    end
+
+    desc 'droplets', 'List all droplets'
+    def droplets
+        droplets = barge.droplet.all.droplets
+        max_name_width = droplets.map { |droplet| droplet.name.length }.max
+        format = "%-10s %-10s %-#{max_name_width + 2}s %-10s %-8s %-8s %-6s %-40s"
+        puts format % ["Image", "ID", "Name", "Status", "Region", "Memory", "Disk", "IP Address"]
+        droplets.each do |droplet|
+            ips = ip_addresses(droplet).join(", ")
+            puts format % [droplet.image.distribution, droplet.id, droplet.name,
+                           droplet.status, droplet.region.slug,
+                           droplet.size_slug.upcase, "#{droplet.disk}GB", ips]
+        end
+    end
+
+    desc 'destroy [droplet-id]', 'Destroy a droplet and scrub its data'
+    def destroy(droplet_id)
+        if !yes?('This is irreversible, are you sure? (y/n)')
+            return
+        end
+        response = barge.droplet.destroy(droplet_id)
+        if response.id || response.message
+            puts "#{response.id}: #{response.message}" 
+        else
+            puts 'Successfully destroyed droplet'
         end
     end
 
@@ -130,5 +152,12 @@ class DOCL::CLI < Thor
         end
 
         @barge ||= Barge::Client.new(access_token: File.read(config_path))
+    end
+
+    def ip_addresses(droplet)
+        network_types = [droplet.networks.v4]
+        network_types << droplet.networks.v6 if droplet.networks.v6
+
+        network_types.flatten.select { |nw| nw.type == 'public' }.map { |nw| nw.ip_address }
     end
 end
