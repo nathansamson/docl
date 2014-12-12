@@ -118,12 +118,12 @@ class DOCL::CLI < Thor
         droplets = barge.droplet.all.droplets
         max_name_width = droplets.map { |droplet| droplet.name.length }.max
         format = "%-10s %-10s %-#{max_name_width + 2}s %-10s %-8s %-8s %-6s %-40s"
-        puts format % ["Image", "ID", "Name", "Status", "Region", "Memory", "Size", "IP Address"]
+        puts format % ["Image", "ID", "Name", "Status", "Region", "Memory", "Disk", "IP Address"]
         droplets.each do |droplet|
             ips = ip_addresses(droplet).join(", ")
             puts format % [droplet.image.distribution, droplet.id, droplet.name,
                            droplet.status, droplet.region.slug,
-                           "#{droplet.memory}MB", "#{droplet.size}GB", ips]
+                           droplet.size_slug.upcase, "#{droplet.disk}GB", ips]
         end
     end
 
