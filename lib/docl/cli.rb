@@ -127,7 +127,7 @@ class DOCL::CLI < Thor
         end
     end
 
-    desc 'destroy [droplet-id]', 'Destroy a droplet'
+    desc 'destroy [droplet-id]', 'Destroy a droplet and scrub its data'
     def destroy(droplet_id)
         if !yes?('This is irreversible, are you sure? (y/n)')
             return
