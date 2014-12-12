@@ -113,6 +113,19 @@ class DOCL::CLI < Thor
         end
     end
 
+    desc 'droplets', 'List all droplets'
+    def droplets
+        format = "%-10s %-10s %-15s %-10s %-10s %-10s %-10s %-40s"
+        puts format % ["Image", "ID", "Name", "Status", "Region", "Memory", "Size", "IP Address"]
+        droplets = barge.droplet.all.droplets
+        droplets.each do |droplet|
+            ips = ip_addresses(droplet).join(", ")
+            puts format % [droplet.image.distribution, droplet.id, droplet.name,
+                           droplet.status, droplet.region.slug,
+                           "#{droplet.memory}MB", "#{droplet.size}GB", ips]
+        end
+    end
+
     private
     def config_path
         File.expand_path('~/.docl-access-token')
