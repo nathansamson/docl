@@ -126,6 +126,16 @@ class DOCL::CLI < Thor
         end
     end
 
+    desc 'destroy [droplet-id]', 'Destroy a droplet'
+    def destroy(droplet_id)
+        response = barge.droplet.destroy(droplet_id)
+        if response.id || response.message
+            puts "#{response.id}: #{response.message}" 
+        else
+            puts 'Successfully destroyed droplet'
+        end
+    end
+
     private
     def config_path
         File.expand_path('~/.docl-access-token')
