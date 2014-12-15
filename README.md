@@ -6,7 +6,7 @@ A command line tool for interacting with DigitalOcean.
 gem install docl
 
 ## Status
-Currently it only supports a very limited subset of oeprations.
+Currently it only supports a very limited subset of operations.
 
 ## Documentation
 Run `docl help` or `docl command help` to get help.
