@@ -85,7 +85,7 @@ class DOCL::CLI < Thor
             ipv6: options.ipv6,
         }
         if options[:key]
-            call_options[:ssh_keys] = [options[:key]]
+            call_options[:ssh_keys] = options[:key].split(",")
         end
         if options.user_data
             call_options[:user_data] = File.read(options.user_data)
