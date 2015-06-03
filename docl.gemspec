@@ -19,6 +19,6 @@ Gem::Specification.new do |gem|
     gem.required_ruby_version = ">= 1.9.3"
 
     gem.add_dependency "thor", "~> 0.19.1"
-    gem.add_dependency "barge", "~> 0.10.0"
+    gem.add_dependency "barge", "~> 0.11.0"
     gem.add_dependency "json", "~> 1.8.1"
 end
