@@ -17,8 +17,9 @@ class DOCL::CLI < Thor
     desc "images", "List all images"
     method_option :public, type: :boolean, default: false, aliases: '-p'
     def images()
-        images = barge.image.all.images
-        images = images.select { |image| image.public == options.public }
+        image_response = barge.image.all
+        display_failure(image_response) and return if failure?(image_response)
+        images = image_response.images.select { |image| image.public == options.public }
         images = images.sort { |a, b| a.name <=> b.name }
         images.each do |image|
             if !image.slug.nil?
@@ -31,7 +32,9 @@ class DOCL::CLI < Thor
 
     desc "keys", "List all keys"
     def keys()
-        barge.key.all.ssh_keys.each do |key|
+        key_response = barge.key.all
+        display_failure(key_response) and return if failure?(key_response)
+        key_response.ssh_keys.each do |key|
             puts "#{key.name} (id: #{key.id})"
         end
     end
@@ -42,8 +45,9 @@ class DOCL::CLI < Thor
     method_option :backups, type: :boolean, default: false
     method_option :ipv6, type: :boolean, default: false
     def regions()
-        regions = barge.region.all.regions
-        regions = regions.select do |region|
+        region_response = barge.region.all
+        display_failure(region_response) and return if failure?(region_response)
+        regions = region_response.regions.select do |region|
             if options.ipv6 && !region.features.include?('ipv6')
                 next false
             end
@@ -92,10 +96,7 @@ class DOCL::CLI < Thor
         end
 
         response = barge.droplet.create(call_options)
-        if response.id == 'unprocessable_entity'
-            puts response.message
-            exit(1)
-        end
+        display_failure(response) and return if failure?(response)
 
         if options.wait
             print "Waiting for droplet to become available"
@@ -115,11 +116,12 @@ class DOCL::CLI < Thor
 
     desc 'droplets', 'List all droplets'
     def droplets
-        droplets = barge.droplet.all.droplets
-        max_name_width = droplets.map { |droplet| droplet.name.length }.max
+        droplet_response = barge.droplet.all
+        display_failure(droplet_response) and return if failure?(droplet_response)
+        max_name_width = droplet_response.droplets.map { |droplet| droplet.name.length }.max
         format = "%-10s %-10s %-#{max_name_width + 2}s %-10s %-8s %-8s %-6s %-40s"
         puts format % ["Image", "ID", "Name", "Status", "Region", "Memory", "Disk", "IP Address"]
-        droplets.each do |droplet|
+        droplet_response.droplets.each do |droplet|
             ips = ip_addresses(droplet).join(", ")
             puts format % [droplet.image.distribution, droplet.id, droplet.name,
                            droplet.status, droplet.region.slug,
@@ -133,11 +135,8 @@ class DOCL::CLI < Thor
             return
         end
         response = barge.droplet.destroy(droplet_id)
-        if response.id || response.message
-            puts "#{response.id}: #{response.message}" 
-        else
-            puts 'Successfully destroyed droplet'
-        end
+        display_failure(response) and return if failure?(response)
+        puts 'Successfully destroyed droplet'
     end
 
     private
@@ -159,5 +158,16 @@ class DOCL::CLI < Thor
         network_types << droplet.networks.v6 if droplet.networks.v6
 
         network_types.flatten.select { |nw| nw.type == 'public' }.map { |nw| nw.ip_address }
+    end
+
+    def display_failure(response)
+      puts "!" * 60
+      puts response.message
+      puts "!" * 60
+      true # Make sure to return true-ish value to allow "and return" to work
+    end
+
+    def failure?(response)
+      response.id && response.message
     end
 end
