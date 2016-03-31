@@ -1,5 +1,7 @@
 # DOCL (DigitalOcean Command Line)
 
+*DigitalOcean has released an official command line tool that has more features and will get more support. Please use doctl whenever possible (https://www.digitalocean.com/company/blog/introducing-doctl/)*
+
 A command line tool for interacting with DigitalOcean.
 
 ## Installation
